@@ -1,28 +1,31 @@
 import React, { useEffect, useState } from 'react'
 import { Route, withRouter, Redirect, Switch } from 'react-router-dom'
-import Login from '../Login'
-import logic from '../../logic'
 import Uikit from 'uikit/dist/js/uikit.min.js'
 
-import './index.css';
+import Loading from '../Loading'
+import Login from '../Login'
+import Home from '../Home'
+
+import logic from '../../logic'
+import './index.css'
 
 function App() {
 
   const [error, setError] = useState(null)
-  const [userOk, setUserOk] = useState(false)
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     setError(false)
-    logic.isUserLoggedIn ? setUserOk(true) : setUserOk(false)
-    setUserOk(false)
   }, [])
 
   const handleLogin = async (email, password) => {
     try {
+      setLoading(true)
       await logic.login(email, password)
-      setUserOk(true)
+      setLoading(false)
     } catch (error) {
       setError(true)
+      setLoading(false)
       Uikit.notification({ message: error.message, status: 'danger', timeout: 1000, pos:'top-right' })
     }
 
@@ -32,12 +35,13 @@ function App() {
       <Route exact path="/" render={() =>
         logic.isUserLoggedIn ?
           <Redirect to="/home" />
+          : loading ? <Loading />
           : <Login onLogin={handleLogin} />
       }
       />
       <Route path="/home" render={() =>
         logic.isUserLoggedIn ?
-            <h1 style={{color: 'white'}}>HOME</h1>
+            <Home />
             : <Redirect to="/" />}
 
       />

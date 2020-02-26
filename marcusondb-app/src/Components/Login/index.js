@@ -15,7 +15,7 @@ function Login({ onLogin }) {
     return <div className='card uk-flex uk-flex-center uk-position-center' data-uk-scrollspy="cls:uk-animation-fade">
         <div className='uk-card-body uk-width-large uk-padding uk-text-center'>
             <div>
-                <p className="select-none subtitle"> The marcusonDB</p>
+                <h1 className="select-none subtitle"> The marcusonDB</h1>
                 <img alt='WOTcon logo' width="220" height="220" src={logo} />
             </div >
             <form className="uk-form-stacked" onSubmit={handleSubmit} >

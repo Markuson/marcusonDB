@@ -75,4 +75,40 @@ router.put('/user/appdata', auth, jsonParser, (req, res) => {
     }, res)
 })
 
+router.post('/app/register', jsonParser, (req, res) => {
+    const { body: { appId, owner } } = req
+
+    handleErrors(async () => {
+        await logic.adminRegisterApp(appId, owner)
+        res.status(201).json({ message: 'Ok, app registered.' })
+    }, res)
+})
+
+router.delete('/app', auth, (req, res) => {
+    const { appId } = req
+
+    handleErrors(async () => {
+        await logic.admindeleteApp(appId)
+        res.status(204).json({ message: 'Ok, app deleted.' })
+    }, res)
+})
+
+router.get('/list/users', auth, (req, res) => {
+    const { userId } = req
+
+    handleErrors(async () => {
+        const userList = await logic.adminRetrieveAllUsers(userId)
+        res.status(202).json(userList)
+    }, res)
+})
+
+router.get('/list/apps', auth, (req, res) => {
+    const { userId } = req
+
+    handleErrors(async () => {
+        const appList = await logic.adminRetrieveAllApps(userId)
+        res.status(202).json(appList)
+    }, res)
+})
+
 module.exports = router

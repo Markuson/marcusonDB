@@ -6,7 +6,7 @@ const { LogicError } = require('../utils/errors')
 const {models} = require('../muDB-data')
 const mongoose = require('mongoose')
 
-const { Users } = models;
+const { Users, Apps } = models;
 const { env: { MONGO_URL_LOGIC_TEST : url }} = process
 
 
@@ -15,34 +15,33 @@ describe('logic', () => {
     before(async () => {
         await mongoose.connect(url, { useNewUrlParser: true,  useFindAndModify: false, useUnifiedTopology: true, useCreateIndex: true })
         await Users.deleteMany()
+        await Apps.deleteMany()
     })
 
-    let email
-    let password = '1234567a'
-    let userData = {
-        name: 'Marc',
-        surname: 'Uson',
-        contact: {
-            tel: 123456789,
-            address1: 'test address 1',
-            address2: 'test adress 2',
-            city: 'TestCity',
-            province: 'Lleida',
-            postalCode: '9999',
-            country: 'Catalunya',
+    xdescribe('users', () => {
+        let email
+        let password = '1234567a'
+        let userData = {
+            name: 'Marc',
+            surname: 'Uson',
+            contact: {
+                tel: 123456789,
+                address1: 'test address 1',
+                address2: 'test adress 2',
+                city: 'TestCity',
+                province: 'Lleida',
+                postalCode: '9999',
+                country: 'Catalunya',
+            }
         }
-    }
-    let appData = {
-        appId: 'testAppId',
-        role: 'user'
-    }
+        let appData = {
+            appId: 'testAppId',
+            role: 'user'
+        }
 
-
-    beforeEach(async () => {
-        email = `marcusontest-${Math.random()}@gmail.com`
-    })
-
-    describe('users', () => {
+        beforeEach(async () => {
+            email = `marcusontest-${Math.random()}@gmail.com`
+        })
 
         describe('register user', () => {
 
@@ -768,6 +767,333 @@ describe('logic', () => {
 
         })
 
+        describe('retrieve all users', () => {
+            let _email = ''
+            let _password = ''
+
+            let _appData = {
+                appId: 'marcusonDB',
+                role: 'god'
+            }
+            beforeEach(async () => {
+                _email = `marcusontest-${Math.random()}@gmail.com`
+                _password = bcrypt.hashSync(password, 10)
+
+                await Users.create({ email: _email, password: _password, userData, appData: _appData })
+
+                const users = await Users.find({email:_email})
+
+                id = users[0].id
+
+                email = users[0].email
+            })
+
+            it('should succeed on retrieving all users', async () => {
+
+                const response = await logic.adminRetrieveAllUsers(id)
+
+                expect(response).to.exist
+                expect(response).to.be.a('array')
+
+                expect(response[0].email).to.exist
+                expect(response[0].password).to.not.exist
+                expect(response[0].id).to.exist
+                expect(response[0].userData).to.exist
+                expect(response[0].appData).to.exist
+            })
+
+            it('should fail on retrieving all users cause user role is not the correct one', async () => {
+                _email = `marcusontest-${Math.random()}@gmail.com`
+                _appData.role = 'user'
+
+                await Users.create({ email: _email, password: _password, userData, appData: _appData })
+
+                const users = await Users.find({email:_email})
+
+                id = users[0].id
+
+                email = users[0].email
+
+                try {
+                    await logic.adminRetrieveAllUsers(id)
+
+                    throw Error('should not reach this point')
+                } catch (error) {
+                    expect(error).to.exist
+                    expect(error).to.be.an.instanceOf(LogicError)
+
+                    expect(error.message).to.equal(`user with id ${id} does not have permisions to view all users`)
+                }
+
+            })
+
+            it('should fail on retrieving all users cause user is not have registered the app marcusonDB ', async () => {
+                _email = `marcusontest-${Math.random()}@gmail.com`
+                _appData.appId = 'aRandomApp'
+
+                await Users.create({ email: _email, password: _password, userData, appData: _appData })
+
+                const users = await Users.find({email:_email})
+
+                id = users[0].id
+
+                email = users[0].email
+
+                try {
+                    await logic.adminRetrieveAllUsers(id)
+
+                    throw Error('should not reach this point')
+                } catch (error) {
+                    expect(error).to.exist
+                    expect(error).to.be.an.instanceOf(LogicError)
+
+                    expect(error.message).to.equal(`user with id ${id} does not have permisions to view all users`)
+                }
+
+            })
+
+        })
+
+    })
+
+    describe('apps', () => {
+        let appId = ``
+        let owner = 'testOwner'
+
+        beforeEach(async () => {
+            appId = `appTest${Math.random()}`
+        })
+
+        describe('register app', () => {
+            it('should succeed on correct app registration with specific owner', async () => {
+
+                const res = await logic.adminRegisterApp(appId, owner)
+
+                expect(res).to.not.exist
+
+                const _app = await Apps.findOne({ appId })
+
+                expect(_app).to.exist
+                expect(_app.appId).to.exist
+                expect(_app.appId).to.be.a('string')
+                expect(_app.owner).to.exist
+                expect(_app.owner).to.be.a('string')
+                expect(_app.owner).to.equal(owner)
+            })
+
+            it('should succeed on correct app registration with default owner', async () => {
+                const res = await logic.adminRegisterApp(appId)
+
+                expect(res).to.not.exist
+
+                const _app = await Apps.findOne({ appId })
+
+                expect(_app).to.exist
+                expect(_app.appId).to.exist
+                expect(_app.appId).to.be.a('string')
+                expect(_app.appId).to.equal(appId)
+                expect(_app.owner).to.exist
+                expect(_app.owner).to.be.a('string')
+                expect(_app.owner).to.equal('marcuson.dev')
+            })
+
+            it('should fail on retrying to register an app', async () => {
+                await Apps.create({appId})
+                try {
+                    await logic.adminRegisterApp(appId, owner)
+
+                    throw Error('should not reach this point')
+                } catch (error) {
+                    expect(error).to.exist
+                    expect(error).to.be.an.instanceOf(LogicError)
+
+                    expect(error.message).to.equal(`app with appId ${appId} already exists`)
+                }
+            })
+
+            it('should fail on undefined app', () => {
+                const appId = undefined
+
+                expect(() => logic.adminRegisterApp(appId, owner)).to.throw(Error, `appId is not optional`)
+            })
+
+            it('should fail on null appId', () => {
+                const appId = null
+
+                expect(() => logic.adminRegisterApp(appId, owner)).to.throw(Error, `appId is not optional`)
+            })
+
+            it('should fail on empty appId', () => {
+                const appId = ''
+
+                expect(() => logic.adminRegisterApp(appId, owner)).to.throw(Error, 'appId is empty')
+            })
+
+            it('should fail on blank appId', () => {
+                const appId = ' \t    \n'
+
+                expect(() => logic.adminRegisterApp(appId, owner)).to.throw(Error, 'appId is empty')
+            })
+        })
+
+        describe('delete app', () => {
+            beforeEach(async () => {
+                await Apps.create({ appId, owner })
+                const apps = await Apps.find({appId})
+                id = apps[0].id
+            })
+
+            it('should succeed on correct app deletion', async () => {
+
+                const res = await logic.adminDeleteApp(id)
+
+                expect(res).to.exist
+
+                expect(res).to.equal('App succesfully deleted')
+
+                const _app = await Apps.findOne({ appId })
+
+                expect(_app).to.not.exist
+            })
+
+            it('should fail on unexisting app id', async () => {
+                id = '01234567890123456789abcd'
+
+                try {
+                    await logic.adminDeleteApp(id)
+
+                    throw new Error('should not reach this point')
+                } catch (error) {
+                    expect(error).to.exist
+
+                    expect(error).to.be.an.instanceOf(LogicError)
+
+                    expect(error.message).to.equal(`app with appId ${id} does not exist`)
+                }
+            })
+
+            it('should fail on undefined id', () => {
+                const id = undefined
+
+                expect(() => logic.adminDeleteApp(id)).to.throw(Error, `id is not optional`)
+            })
+
+            it('should fail on null id', () => {
+                const id = null
+
+                expect(() => logic.adminDeleteApp(id)).to.throw(Error, `id is not optional`)
+            })
+
+            it('should fail on empty id', () => {
+                const id = ''
+
+                expect(() => logic.adminDeleteApp(id)).to.throw(Error, 'id is empty')
+            })
+
+            it('should fail on blank id', () => {
+                const id = ' \t    \n'
+
+                expect(() => logic.adminDeleteApp(id)).to.throw(Error, 'id is empty')
+            })
+        })
+
+        describe('retrieve all apps', () => {
+            let password = '1234567a'
+            let userData = {
+                name: 'Marc',
+                surname: 'Uson',
+                contact: {
+                    tel: 123456789,
+                    address1: 'test address 1',
+                    address2: 'test adress 2',
+                    city: 'TestCity',
+                    province: 'Lleida',
+                    postalCode: '9999',
+                    country: 'Catalunya',
+                }
+            }
+            let _email = ''
+            let _password = ''
+
+            let _appData = {
+                appId: 'marcusonDB',
+                role: 'god'
+            }
+            beforeEach(async () => {
+                _email = `marcusontest-${Math.random()}@gmail.com`
+                _password = bcrypt.hashSync(password, 10)
+
+                await Users.create({ email: _email, password: _password, userData, appData: _appData })
+
+                const users = await Users.find({email:_email})
+
+                id = users[0].id
+
+                email = users[0].email
+            })
+
+            it('should succeed on retrieving all apps', async () => {
+
+                const response = await logic.adminRetrieveAllApps(id)
+
+                expect(response).to.exist
+                expect(response).to.be.a('array')
+
+                expect(response[0].appId).to.exist
+                expect(response[0].owner).to.exist
+            })
+
+            it('should fail on retrieving all users cause user role is not the correct one', async () => {
+                _email = `marcusontest-${Math.random()}@gmail.com`
+                _appData.role = 'user'
+
+                await Users.create({ email: _email, password: _password, userData, appData: _appData })
+
+                const users = await Users.find({email:_email})
+
+                id = users[0].id
+
+                email = users[0].email
+
+                try {
+                    await logic.adminRetrieveAllApps(id)
+
+                    throw Error('should not reach this point')
+                } catch (error) {
+                    expect(error).to.exist
+                    expect(error).to.be.an.instanceOf(LogicError)
+
+                    expect(error.message).to.equal(`user with id ${id} does not have permisions to view all apps`)
+                }
+
+            })
+
+            it('should fail on retrieving all users cause user is not have registered the app marcusonDB ', async () => {
+                _email = `marcusontest-${Math.random()}@gmail.com`
+                _appData.appId = 'aRandomApp'
+
+                await Users.create({ email: _email, password: _password, userData, appData: _appData })
+
+                const users = await Users.find({email:_email})
+
+                id = users[0].id
+
+                email = users[0].email
+
+                try {
+                    await logic.adminRetrieveAllApps(id)
+
+                    throw Error('should not reach this point')
+                } catch (error) {
+                    expect(error).to.exist
+                    expect(error).to.be.an.instanceOf(LogicError)
+
+                    expect(error.message).to.equal(`user with id ${id} does not have permisions to view all apps`)
+                }
+
+            })
+
+        })
     })
 
     after(async () => {
