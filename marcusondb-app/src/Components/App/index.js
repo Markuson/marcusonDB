@@ -5,17 +5,19 @@ import Uikit from 'uikit/dist/js/uikit.min.js'
 import Loading from '../Loading'
 import Login from '../Login'
 import Home from '../Home'
+import AppList from '../AppList'
+import AppRegister from '../AppRegister'
+import UserList from '../UserList'
+import UserRegister from '../UserRegister'
 
 import logic from '../../logic'
 import './index.css'
 
-function App() {
+function App(props) {
 
-  const [error, setError] = useState(null)
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    setError(false)
   }, [])
 
   const handleLogin = async (email, password) => {
@@ -23,26 +25,66 @@ function App() {
       setLoading(true)
       await logic.login(email, password)
       setLoading(false)
+      props.history.push('/home')
     } catch (error) {
-      setError(true)
-      setLoading(false)
-      Uikit.notification({ message: error.message, status: 'danger', timeout: 1000, pos:'top-right' })
-    }
 
+      setLoading(false)
+      Uikit.notification({ message: error.message, status: 'danger', timeout: 1000, pos: 'top-right' })
+    }
   }
+
+  const handleAppList = () => {
+    props.history.push('/applist')
+  }
+
+  const handleAppRegister = () => {
+    props.history.push('/appregister')
+  }
+
+  const handleUserList = () => {
+    props.history.push('/userlist')
+  }
+
+  const handleUserRegister = () => {
+    props.history.push('/userregister')
+  }
+
   return (
     <Switch>
       <Route exact path="/" render={() =>
         logic.isUserLoggedIn ?
           <Redirect to="/home" />
           : loading ? <Loading />
-          : <Login onLogin={handleLogin} />
+            : <Login onLogin={handleLogin} />
       }
       />
       <Route path="/home" render={() =>
         logic.isUserLoggedIn ?
-            <Home />
-            : <Redirect to="/" />}
+          <Home onAppList={handleAppList} onAppRegister={handleAppRegister} onUserList={handleUserList} onUserRegister={handleUserRegister} />
+          : <Redirect to="/" />}
+
+      />
+      <Route path="/applist" render={() =>
+        logic.isUserLoggedIn ?
+          <AppList onAppList={handleAppList} onAppRegister={handleAppRegister} onUserList={handleUserList} onUserRegister={handleUserRegister} />
+          : <Redirect to="/" />}
+
+      />
+      <Route path="/appregister" render={() =>
+        logic.isUserLoggedIn ?
+          <AppRegister onAppList={handleAppList} onAppRegister={handleAppRegister} onUserList={handleUserList} onUserRegister={handleUserRegister} />
+          : <Redirect to="/" />}
+      />
+      <Route path="/userlist" render={() =>
+        logic.isUserLoggedIn ?
+          <UserList onAppList={handleAppList} onAppRegister={handleAppRegister} onUserList={handleUserList} onUserRegister={handleUserRegister} />
+          : <Redirect to="/" />}
+
+      />
+      <Route path="/userregister" render={() =>
+        logic.isUserLoggedIn ?
+          <UserRegister onAppList={handleAppList} onAppRegister={handleAppRegister} onUserList={handleUserList} onUserRegister={handleUserRegister} />
+          : <Redirect to="/" />}
 
       />
       <Redirect to="/" />

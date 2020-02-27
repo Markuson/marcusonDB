@@ -1,7 +1,7 @@
 import React from 'react'
 import logo from '../../assets/images/logo.png'
 
-function Login({ onLogin }) {
+export default function Login({ onLogin }) {
 
     function handleSubmit(e) {
         e.preventDefault()
@@ -32,5 +32,3 @@ function Login({ onLogin }) {
         </div>
     </div>
 }
-
-export default Login
