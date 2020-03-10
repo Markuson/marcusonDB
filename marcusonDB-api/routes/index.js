@@ -21,10 +21,10 @@ router.post('/user/register', jsonParser, (req, res) => {
 })
 
 router.post('/user', jsonParser, (req, res) => {
-    const { body: { email, password } } = req
+    const { body: { email, password, appId } } = req
 
     handleErrors(async () => {
-        const sub = await logic.authenticateUser(email, password)
+        const sub = await logic.authenticateUser(email, password, appId)
         const token = jwt.sign({ sub }, JWT_SECRET, { expiresIn: '24h' })
         res.status(202).json({ token })
     }, res)
@@ -71,7 +71,7 @@ router.put('/user/appdata', auth, jsonParser, (req, res) => {
 
     handleErrors(async () => {
         await logic.deleteUserAppData(userId, appId)
-        res.status(204).json({ message: 'Ok, App deleted.' })
+        res.status(201).json({ message: 'Ok, App deleted.' })
     }, res)
 })
 
@@ -84,16 +84,15 @@ router.post('/app/register', jsonParser, (req, res) => {
     }, res)
 })
 
-router.delete('/app', auth, (req, res) => {
-    const { appId } = req
-
+router.put('/app/delete', auth, jsonParser, (req, res) => {
+    const { body: { appId } } = req
     handleErrors(async () => {
-        await logic.admindeleteApp(appId)
-        res.status(204).json({ message: 'Ok, app deleted.' })
+        await logic.adminDeleteApp(appId)
+        res.status(201).json({ message: 'Ok, app deleted.' })
     }, res)
 })
 
-router.get('/list/users', auth, (req, res) => {
+router.get('/admin/listusers', auth, (req, res) => {
     const { userId } = req
 
     handleErrors(async () => {
@@ -102,12 +101,39 @@ router.get('/list/users', auth, (req, res) => {
     }, res)
 })
 
-router.get('/list/apps', auth, (req, res) => {
+router.get('/admin/listapps', auth, (req, res) => {
     const { userId } = req
 
     handleErrors(async () => {
         const appList = await logic.adminRetrieveAllApps(userId)
         res.status(202).json(appList)
+    }, res)
+})
+
+router.put('/admin/deleteuser', auth, jsonParser, (req, res) => {
+    const { userId, body: { email } } = req
+
+    handleErrors(async () => {
+        await logic.adminDeleteUser(userId, email)
+        res.status(201).json({ message: `Ok, user ${email} deleted.` })
+    }, res)
+})
+
+router.put('/admin/registerapp', auth, jsonParser, (req, res) => {
+    const { userId, body: { email, appData } } = req
+
+    handleErrors(async () => {
+        await logic.adminRegisterUserAppData(userId, email, appData)
+        res.status(201).json({ message: `Ok, app succesfully registered to user ${email}.` })
+    }, res)
+})
+
+router.put('/admin/deleteapp', auth, jsonParser, (req, res) => {
+    const { userId, body: { email, appId } } = req
+
+    handleErrors(async () => {
+        await logic.adminDeleteUserAppData(userId, email, appId)
+        res.status(201).json({ message: `Ok, app succesfully deleted to user ${email}.` })
     }, res)
 })
 
