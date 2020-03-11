@@ -16,8 +16,10 @@ import './index.css'
 function App(props) {
 
   const [loading, setLoading] = useState(false)
+  const [appList, setAppList] = useState(undefined)
 
   useEffect(() => {
+    if(appList===undefined) retrieveAppList()
   }, [])
 
   const handleLogin = async (email, password) => {
@@ -27,7 +29,6 @@ function App(props) {
       setLoading(false)
       props.history.push('/home')
     } catch (error) {
-
       setLoading(false)
       Uikit.notification({ message: error.message, status: 'danger', timeout: 1000, pos: 'top-right' })
     }
@@ -47,6 +48,24 @@ function App(props) {
 
   const handleUserRegister = () => {
     props.history.push('/userregister')
+  }
+
+  const retrieveAppList = async () => {
+    try {
+      const result = await logic.adminRetrieveAllApps()
+      setAppList(result)
+    } catch (error) {
+      Uikit.notification({ message: error.message, status: 'danger', timeout: 1000, pos: 'top-right' })
+    }
+  }
+  const submitNewUser = async (email, password, userData,appData) => {
+    try {
+      await logic.userRegister(email, password, userData, appData)
+      Uikit.notification({ message: 'User successfully registered', status: 'success', timeout: 1000, pos: 'top-right' })
+      props.history.push('/home')
+    } catch (error) {
+      Uikit.notification({ message: error.message, status: 'danger', timeout: 1000, pos: 'top-right' })
+    }
   }
 
   return (
@@ -83,7 +102,7 @@ function App(props) {
       />
       <Route path="/userregister" render={() =>
         logic.isUserLoggedIn ?
-          <UserRegister onAppList={handleAppList} onAppRegister={handleAppRegister} onUserList={handleUserList} onUserRegister={handleUserRegister} />
+          <UserRegister appList={appList} onAppList={handleAppList} onAppRegister={handleAppRegister} onUserList={handleUserList} onUserRegister={handleUserRegister} onUserSubmit={submitNewUser}/>
           : <Redirect to="/" />}
 
       />

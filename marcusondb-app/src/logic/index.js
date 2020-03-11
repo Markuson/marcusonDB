@@ -16,7 +16,7 @@ const logic = {
         return !!(this.__userToken__)
     },
 
-    userRegister(email, password, UserData, appData) {
+    userRegister(email, password, userData, appData) {
         validate.arguments([
             { name: 'email', value: email, type: 'string', notEmpty: true },
             { name: 'password', value: password, type: 'string', notEmpty: true },
@@ -27,7 +27,7 @@ const logic = {
 
         return (async () => {
             try {
-                await restApi.registerUser(email, password, UserData, appData)
+                await restApi.registerUser(email, password, userData, appData)
                 return "user succesfully registered"
             } catch (error) {
                 throw new LogicError(error)

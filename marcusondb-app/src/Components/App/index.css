@@ -9,13 +9,3 @@
   font-size: calc(10px + 2vmin);
   color: black;
 }
-
-.select-none{
-  user-select: none;
-}
-
-.subtitle {
-  color: black;
-  font-family: 'Montserrat';
-  font-weight: 300;
-}
