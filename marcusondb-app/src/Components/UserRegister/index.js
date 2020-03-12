@@ -3,10 +3,10 @@ import Navbar from '../Navbar'
 
 export default function UserRegister({
     appList,
-    onAppList,
-    onAppRegister,
-    onUserList,
-    onUserRegister,
+    onNavigateAppList,
+    onNavigateAppRegister,
+    onNavigateUserList,
+    onNavigateUserRegister,
     onUserSubmit
 }) {
     const handleSubmit = (e) => {
@@ -34,7 +34,7 @@ export default function UserRegister({
     }
 
     return <div>
-        <Navbar onAppList={onAppList} onAppRegister={onAppRegister} onUserList={onUserList} onUserRegister={onUserRegister} selected={'UserRegister'} />
+        <Navbar onNavigateAppList={onNavigateAppList} onNavigateAppRegister={onNavigateAppRegister} onNavigateUserList={onNavigateUserList} onNavigateUserRegister={onNavigateUserRegister} selected={'UserRegister'} />
         <div className=' uk-container uk-flex uk-flex-center '>
             <div className='card uk-width-large ' data-uk-scrollspy="cls:uk-animation-fade">
                 <div className='uk-card-body '>

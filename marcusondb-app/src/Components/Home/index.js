@@ -2,30 +2,30 @@ import React from 'react'
 
 
 export default function Home({
-    onAppList,
-    onAppRegister,
-    onUserList,
-    onUserRegister
+    onNavigateAppList,
+    onNavigateAppRegister,
+    onNavigateUserList,
+    onNavigateUserRegister
 }) {
 
     const appList = (e) => {
         e.preventDefault()
-        onAppList()
+        onNavigateAppList()
     }
 
     const appRegister = (e) => {
         e.preventDefault()
-        onAppRegister()
+        onNavigateAppRegister()
     }
 
     const userList = (e) => {
         e.preventDefault()
-        onUserList()
+        onNavigateUserList()
     }
 
     const userRegister = (e) => {
         e.preventDefault()
-        onUserRegister()
+        onNavigateUserRegister()
     }
 
     return <div className='card uk-flex uk-flex-center uk-position-center' data-uk-scrollspy="cls:uk-animation-fade">

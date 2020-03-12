@@ -11,16 +11,30 @@ import UserList from '../UserList'
 import UserRegister from '../UserRegister'
 
 import logic from '../../logic'
-import './index.css'
 
 function App(props) {
 
-  const [loading, setLoading] = useState(false)
   const [appList, setAppList] = useState(undefined)
+  const [loading, setLoading] = useState(false)
+  const [userList, setUserList] = useState(undefined)
 
   useEffect(() => {
-    if(appList===undefined) retrieveAppList()
-  }, [])
+    if (appList === undefined) retrieveAppList()
+    if (userList === undefined) retrieveUserList()
+  })
+
+  const handleAppDelete = (appId) => {
+    Uikit.modal.confirm(`Do you really want to delete the app ${appId}?`).then(function () {
+      (async () => {
+        try {
+          await logic.appDelete(appId)
+          retrieveAppList()
+        } catch (error) {
+          Uikit.notification({ message: error.message, status: 'danger', timeout: 1000, pos: 'top-right' })
+        }
+      })()
+    })
+  }
 
   const handleLogin = async (email, password) => {
     try {
@@ -34,19 +48,19 @@ function App(props) {
     }
   }
 
-  const handleAppList = () => {
+  const handleNavigateAppList = () => {
     props.history.push('/applist')
   }
 
-  const handleAppRegister = () => {
+  const handleNavigateAppRegister = () => {
     props.history.push('/appregister')
   }
 
-  const handleUserList = () => {
+  const handleNavigateUserList = () => {
     props.history.push('/userlist')
   }
 
-  const handleUserRegister = () => {
+  const handleNavigateUserRegister = () => {
     props.history.push('/userregister')
   }
 
@@ -58,14 +72,54 @@ function App(props) {
       Uikit.notification({ message: error.message, status: 'danger', timeout: 1000, pos: 'top-right' })
     }
   }
-  const submitNewUser = async (email, password, userData,appData) => {
+
+  const retrieveUserList = async () => {
+    try {
+      const result = await logic.retrieveAllUsers()
+      setUserList(result)
+    } catch (error) {
+      Uikit.notification({ message: error.message, status: 'danger', timeout: 1000, pos: 'top-right' })
+    }
+  }
+
+  const submitNewUser = async (email, password, userData, appData) => {
     try {
       await logic.userRegister(email, password, userData, appData)
       Uikit.notification({ message: 'User successfully registered', status: 'success', timeout: 1000, pos: 'top-right' })
       props.history.push('/home')
+      const result = await logic.retrieveAllUsers()
+      setUserList(result)
     } catch (error) {
       Uikit.notification({ message: error.message, status: 'danger', timeout: 1000, pos: 'top-right' })
     }
+  }
+
+  const userAppDataDelete = async (email, appId) => {
+    Uikit.modal.confirm(`Do you really want to delete the app ${appId} for user ${email}?`).then(function () {
+      (async () => {
+        try {
+          await logic.adminDeleteUserAppData(email, appId)
+          Uikit.notification({ message: 'app successfully deleted', status: 'success', timeout: 1000, pos: 'top-right' })
+          retrieveUserList()
+        } catch (error) {
+          Uikit.notification({ message: error.message, status: 'danger', timeout: 1000, pos: 'top-right' })
+        }
+      })()
+    })
+  }
+
+  const userDelete = async (email) => {
+    Uikit.modal.confirm(`Do you really want to delete the user ${email}?`).then(function () {
+      (async () => {
+        try {
+          await logic.adminDeleteUser(email)
+          Uikit.notification({ message: 'User successfully deleted', status: 'success', timeout: 1000, pos: 'top-right' })
+          retrieveUserList()
+        } catch (error) {
+          Uikit.notification({ message: error.message, status: 'danger', timeout: 1000, pos: 'top-right' })
+        }
+      })()
+    })
   }
 
   return (
@@ -79,30 +133,30 @@ function App(props) {
       />
       <Route path="/home" render={() =>
         logic.isUserLoggedIn ?
-          <Home onAppList={handleAppList} onAppRegister={handleAppRegister} onUserList={handleUserList} onUserRegister={handleUserRegister} />
+          <Home onNavigateAppList={handleNavigateAppList} onNavigateAppRegister={handleNavigateAppRegister} onNavigateUserList={handleNavigateUserList} onNavigateUserRegister={handleNavigateUserRegister} />
           : <Redirect to="/" />}
 
       />
       <Route path="/applist" render={() =>
         logic.isUserLoggedIn ?
-          <AppList onAppList={handleAppList} onAppRegister={handleAppRegister} onUserList={handleUserList} onUserRegister={handleUserRegister} />
+          <AppList appList={appList} onAppDelete={handleAppDelete} onNavigateAppList={handleNavigateAppList} onNavigateAppRegister={handleNavigateAppRegister} onNavigateUserList={handleNavigateUserList} onNavigateUserRegister={handleNavigateUserRegister} />
           : <Redirect to="/" />}
 
       />
       <Route path="/appregister" render={() =>
         logic.isUserLoggedIn ?
-          <AppRegister onAppList={handleAppList} onAppRegister={handleAppRegister} onUserList={handleUserList} onUserRegister={handleUserRegister} />
+          <AppRegister onNavigateAppList={handleNavigateAppList} onNavigateAppRegister={handleNavigateAppRegister} onNavigateUserList={handleNavigateUserList} onNavigateUserRegister={handleNavigateUserRegister} />
           : <Redirect to="/" />}
       />
       <Route path="/userlist" render={() =>
         logic.isUserLoggedIn ?
-          <UserList onAppList={handleAppList} onAppRegister={handleAppRegister} onUserList={handleUserList} onUserRegister={handleUserRegister} />
+          <UserList onNavigateAppList={handleNavigateAppList} onNavigateAppRegister={handleNavigateAppRegister} onNavigateUserList={handleNavigateUserList} onNavigateUserRegister={handleNavigateUserRegister} onUserDelete={userDelete} onUserAppDataDelete={userAppDataDelete} userList={userList} />
           : <Redirect to="/" />}
 
       />
       <Route path="/userregister" render={() =>
         logic.isUserLoggedIn ?
-          <UserRegister appList={appList} onAppList={handleAppList} onAppRegister={handleAppRegister} onUserList={handleUserList} onUserRegister={handleUserRegister} onUserSubmit={submitNewUser}/>
+          <UserRegister appList={appList} onNavigateAppList={handleNavigateAppList} onNavigateAppRegister={handleNavigateAppRegister} onNavigateUserList={handleNavigateUserList} onNavigateUserRegister={handleNavigateUserRegister} onUserSubmit={submitNewUser} />
           : <Redirect to="/" />}
 
       />

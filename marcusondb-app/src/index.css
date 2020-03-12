@@ -8,9 +8,8 @@ body {
   -moz-osx-font-smoothing: grayscale;
   background-image: url('./assets/images/database.jpg') ;
   background-size: cover;
-  height: 100vh;
-  width: 100vw;
-  overflow: hidden;
+  background-attachment: fixed;
+  min-height: 100vh;
 }
 
 .card{
@@ -22,4 +21,8 @@ body {
 
 .select-none{
   user-select: none;
+}
+
+.scroll{
+  overflow: auto;
 }

@@ -1,37 +1,35 @@
 import React from 'react'
 
-import './index.css'
-
 export default function Navbar({
-    onAppList,
-    onAppRegister,
-    onUserList,
-    onUserRegister,
+    onNavigateAppList,
+    onNavigateAppRegister,
+    onNavigateUserList,
+    onNavigateUserRegister,
     selected = undefined
 }) {
 
     const appList = (e) => {
         e.preventDefault()
-        onAppList()
+        onNavigateAppList()
     }
 
     const appRegister = (e) => {
         e.preventDefault()
-        onAppRegister()
+        onNavigateAppRegister()
     }
 
     const userList = (e) => {
         e.preventDefault()
-        onUserList()
+        onNavigateUserList()
     }
 
     const userRegister = (e) => {
         e.preventDefault()
-        onUserRegister()
+        onNavigateUserRegister()
     }
 
-    return <div data-uk-sticky="sel-target: .uk-navbar-container; cls-active: uk-navbar-sticky" >
-        <nav className="uk-navbar-container uk-navbar-transparent" data-uk-navbar data-uk-scrollspy="cls:uk-animation-fade">
+    return <div data-uk-sticky="sel-target: .uk-navbar-container; cls-active: uk-navbar-sticky uk-background-secondary; top: 100; animation: uk-animation-slide-top; bottom: #sticky-on-scroll-up " >
+        <nav className="uk-navbar-container uk-light uk-navbar-transparent" data-uk-navbar data-uk-scrollspy="cls:uk-animation-fade ">
             <div className="uk-navbar-center">
                 <ul className="uk-navbar-nav">
                     <div className='uk-padding'>

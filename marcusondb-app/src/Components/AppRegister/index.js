@@ -2,11 +2,11 @@ import React from 'react'
 import Navbar from '../Navbar'
 
 export default function AppRegister({
-    onAppList,
-    onAppRegister,
     onAppSubmit,
-    onUserList,
-    onUserRegister,
+    onNavigateAppList,
+    onNavigateAppRegister,
+    onNavigateUserList,
+    onNavigateUserRegister,
 }) {
     const handleSubmit = (e) => {
         const appData = {
@@ -17,7 +17,7 @@ export default function AppRegister({
     }
 
     return <div>
-        <Navbar onAppList={onAppList} onAppRegister={onAppRegister} onUserList={onUserList} onUserRegister={onUserRegister} selected={'AppRegister'} />
+        <Navbar onNavigateAppList={onNavigateAppList} onNavigateAppRegister={onNavigateAppRegister} onNavigateUserList={onNavigateUserList} onNavigateUserRegister={onNavigateUserRegister} selected={'AppRegister'} />
         <div className=' uk-container uk-flex uk-flex-center '>
             <div className='card uk-width-large ' data-uk-scrollspy="cls:uk-animation-fade">
                 <div className='uk-card-body '>
