@@ -1,14 +1,9 @@
 import React from 'react'
-import Navbar from '../Navbar'
 import Loading from '../Loading'
 
 export default function AppList({
     appList,
     onAppDelete,
-    onNavigateAppList,
-    onNavigateAppRegister,
-    onNavigateUserList,
-    onNavigateUserRegister
 }) {
 
     const deleteApp = (appId) => {
@@ -19,9 +14,7 @@ export default function AppList({
         console.log(`edit app: ${appId}`)
     }
 
-    return <div >
-        <Navbar onNavigateAppList={onNavigateAppList} onNavigateAppRegister={onNavigateAppRegister} onNavigateUserList={onNavigateUserList} onNavigateUserRegister={onNavigateUserRegister} selected={'AppList'} />
-        <div className='uk-container uk-container-expand uk-flex uk-flex-center '>
+    return <div className='uk-container uk-container-expand uk-flex uk-flex-center '>
             {appList &&
                 <div className='card uk-width-expand' data-uk-scrollspy='cls:uk-animation-fade'>
                     <div className='uk-card-body '>
@@ -59,6 +52,5 @@ export default function AppList({
             {!appList &&
                 <Loading />
             }
-        </div>
     </div>
 }

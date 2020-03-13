@@ -9,6 +9,7 @@ import AppList from '../AppList'
 import AppRegister from '../AppRegister'
 import UserList from '../UserList'
 import UserRegister from '../UserRegister'
+import Navbar from '../Navbar'
 
 import logic from '../../logic'
 
@@ -17,17 +18,27 @@ function App(props) {
   const [appList, setAppList] = useState(undefined)
   const [loading, setLoading] = useState(false)
   const [userList, setUserList] = useState(undefined)
+  const [selectedMail, setSelectedMail] = useState('')
 
   useEffect(() => {
-    if (appList === undefined) retrieveAppList()
-    if (userList === undefined) retrieveUserList()
+    if (logic.isUserLoggedIn) {
+      if (appList === undefined) retrieveAppList()
+      if (userList === undefined) retrieveUserList()
+    }
   })
+
+  const clearData = () => {
+    setAppList(undefined)
+    setUserList(undefined)
+    setSelectedMail(undefined)
+  }
 
   const handleAppDelete = (appId) => {
     Uikit.modal.confirm(`Do you really want to delete the app ${appId}?`).then(function () {
       (async () => {
         try {
           await logic.appDelete(appId)
+          Uikit.notification({ message: 'App successfully deleted', status: 'success', timeout: 1000, pos: 'top-right' })
           retrieveAppList()
         } catch (error) {
           Uikit.notification({ message: error.message, status: 'danger', timeout: 1000, pos: 'top-right' })
@@ -36,16 +47,31 @@ function App(props) {
     })
   }
 
+  const handleAppAdd = async (appId, owner) => {
+    try {
+      await logic.appRegister(appId, owner)
+      Uikit.notification({ message: 'App successfully registered', status: 'success', timeout: 1000, pos: 'top-right' })
+      retrieveAppList()
+      props.history.push('/applist')
+    } catch (error) {
+      Uikit.notification({ message: error.message, status: 'danger', timeout: 1000, pos: 'top-right' })
+    }
+  }
+
   const handleLogin = async (email, password) => {
     try {
       setLoading(true)
       await logic.login(email, password)
       setLoading(false)
-      props.history.push('/home')
     } catch (error) {
       setLoading(false)
       Uikit.notification({ message: error.message, status: 'danger', timeout: 1000, pos: 'top-right' })
     }
+  }
+
+  const handleLogout = () => {
+    clearData()
+    logic.logout()
   }
 
   const handleNavigateAppList = () => {
@@ -86,7 +112,7 @@ function App(props) {
     try {
       await logic.userRegister(email, password, userData, appData)
       Uikit.notification({ message: 'User successfully registered', status: 'success', timeout: 1000, pos: 'top-right' })
-      props.history.push('/home')
+      props.history.push('/userlist')
       const result = await logic.retrieveAllUsers()
       setUserList(result)
     } catch (error) {
@@ -108,8 +134,18 @@ function App(props) {
     })
   }
 
+  const userAppDataAdd = async (email, appId, role) => {
+    try {
+      await logic.adminRegisterUserAppData(email, { appId, role })
+      Uikit.notification({ message: `App ${appId} successfully added to the user ${email}`, status: 'success', timeout: 1000, pos: 'top-right' })
+      retrieveUserList()
+    } catch (error) {
+      Uikit.notification({ message: error.message, status: 'danger', timeout: 1000, pos: 'top-right' })
+    }
+  }
+
   const userDelete = async (email) => {
-    Uikit.modal.confirm(`Do you really want to delete the user ${email}?`).then(function () {
+    Uikit.modal.confirm(`Do you really want to delete the user ${email}?`).then(() => {
       (async () => {
         try {
           await logic.adminDeleteUser(email)
@@ -133,32 +169,83 @@ function App(props) {
       />
       <Route path="/home" render={() =>
         logic.isUserLoggedIn ?
-          <Home onNavigateAppList={handleNavigateAppList} onNavigateAppRegister={handleNavigateAppRegister} onNavigateUserList={handleNavigateUserList} onNavigateUserRegister={handleNavigateUserRegister} />
+          <Home
+            onNavigateAppList={handleNavigateAppList}
+            onNavigateAppRegister={handleNavigateAppRegister}
+            onNavigateUserList={handleNavigateUserList}
+            onNavigateUserRegister={handleNavigateUserRegister}
+          />
           : <Redirect to="/" />}
-
       />
       <Route path="/applist" render={() =>
         logic.isUserLoggedIn ?
-          <AppList appList={appList} onAppDelete={handleAppDelete} onNavigateAppList={handleNavigateAppList} onNavigateAppRegister={handleNavigateAppRegister} onNavigateUserList={handleNavigateUserList} onNavigateUserRegister={handleNavigateUserRegister} />
+          <div>
+            <Navbar
+              onLogout={handleLogout}
+              onNavigateAppList={handleNavigateAppList}
+              onNavigateAppRegister={handleNavigateAppRegister}
+              onNavigateUserList={handleNavigateUserList}
+              onNavigateUserRegister={handleNavigateUserRegister} selected={'AppList'}
+            />
+            <AppList appList={appList} onAppDelete={handleAppDelete} />
+          </div>
           : <Redirect to="/" />}
 
       />
       <Route path="/appregister" render={() =>
         logic.isUserLoggedIn ?
-          <AppRegister onNavigateAppList={handleNavigateAppList} onNavigateAppRegister={handleNavigateAppRegister} onNavigateUserList={handleNavigateUserList} onNavigateUserRegister={handleNavigateUserRegister} />
+          <div>
+            <Navbar
+              onLogout={handleLogout}
+              onNavigateAppList={handleNavigateAppList}
+              onNavigateAppRegister={handleNavigateAppRegister}
+              onNavigateUserList={handleNavigateUserList}
+              onNavigateUserRegister={handleNavigateUserRegister}
+              selected={'AppRegister'}
+            />
+            <AppRegister onAppSubmit={handleAppAdd} />
+          </div>
           : <Redirect to="/" />}
       />
       <Route path="/userlist" render={() =>
         logic.isUserLoggedIn ?
-          <UserList onNavigateAppList={handleNavigateAppList} onNavigateAppRegister={handleNavigateAppRegister} onNavigateUserList={handleNavigateUserList} onNavigateUserRegister={handleNavigateUserRegister} onUserDelete={userDelete} onUserAppDataDelete={userAppDataDelete} userList={userList} />
+          <div>
+            <Navbar
+              onLogout={handleLogout}
+              onNavigateAppList={handleNavigateAppList}
+              onNavigateAppRegister={handleNavigateAppRegister}
+              onNavigateUserList={handleNavigateUserList}
+              onNavigateUserRegister={handleNavigateUserRegister}
+              selected={'UserList'}
+            />
+            <UserList
+              appList={appList}
+              onUserDelete={userDelete}
+              onUserAppDataAdd={userAppDataAdd}
+              onUserAppDataDelete={userAppDataDelete}
+              selectedMail={selectedMail}
+              setSelectedMail={setSelectedMail}
+              userList={userList} />
+          </div>
           : <Redirect to="/" />}
-
       />
       <Route path="/userregister" render={() =>
         logic.isUserLoggedIn ?
-          <UserRegister appList={appList} onNavigateAppList={handleNavigateAppList} onNavigateAppRegister={handleNavigateAppRegister} onNavigateUserList={handleNavigateUserList} onNavigateUserRegister={handleNavigateUserRegister} onUserSubmit={submitNewUser} />
+          <div>
+            <Navbar
+              onLogout={handleLogout}
+              onNavigateAppList={handleNavigateAppList}
+              onNavigateAppRegister={handleNavigateAppRegister}
+              onNavigateUserList={handleNavigateUserList}
+              onNavigateUserRegister={handleNavigateUserRegister}
+              selected={'UserRegister'}
+            />
+            <UserRegister
+              appList={appList}
+              onUserSubmit={submitNewUser}
+            />
+          </div>
           : <Redirect to="/" />}
-
       />
       <Redirect to="/" />
     </Switch>

@@ -1,6 +1,7 @@
 import React from 'react'
 
 export default function Navbar({
+    onLogout,
     onNavigateAppList,
     onNavigateAppRegister,
     onNavigateUserList,
@@ -62,6 +63,17 @@ export default function Navbar({
                     </div>
                 </ul>
 
+            </div>
+            <div className="uk-navbar-right">
+                <ul className="uk-navbar-nav">
+                    <div className='uk-padding'>
+                        <li className='uk-active uk-visible@s'>
+                            <button className="uk-button uk-button-text uk-button-large" onClick={() => onLogout()} data-uk-tooltip="title: Logout ; pos: bottom">
+                                <span className="uk-icon" data-uk-icon="icon: sign-out; ratio: 1"></span>
+                            </button>
+                        </li>
+                    </div>
+                </ul>
             </div>
         </nav>
     </div>
