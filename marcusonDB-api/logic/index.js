@@ -4,7 +4,7 @@ const { models } = require('../muDB-data')
 const call = require('../utils/call')
 const bcrypt = require('bcrypt')
 
-const { Users } = models
+const { Users, Apps } = models
 
 const logic = {
 
@@ -62,13 +62,16 @@ const logic = {
      * @param {string} email email defined by the user in registration process
      * @param {string} password password defined from the user in registration process
      */
-    authenticateUser(email, password) {
+    authenticateUser(email, password, appId) {
         validate.arguments([
             { name: 'email', value: email, type: 'string', notEmpty: true },
-            { name: 'password', value: password, type: 'string', notEmpty: true }
+            { name: 'password', value: password, type: 'string', notEmpty: true },
+            { name: 'appId', value: appId, type: 'string', notEmpty: true }
         ])
         let _email = email.toLowerCase()
         validate.email(_email)
+
+        let userPermision = false
 
         return (async () => {
             const user = await Users.findOne({ email: _email })
@@ -78,6 +81,12 @@ const logic = {
             const pass = bcrypt.compareSync(password, user.password)
 
             if (!pass) throw new LogicError('wrong credentials')
+
+            user.appData.forEach(app => {
+                if(app.appId === appId) userPermision = true
+            })
+
+            if(!userPermision) throw new LogicError(`user with email ${email} does not exist`)
 
             return user.id
         })()
@@ -243,6 +252,224 @@ const logic = {
             }
         })()
     },
+
+    adminRetrieveAllUsers(id) {
+        validate.arguments([
+            { name: 'id', value: id, type: 'string', notEmpty: true }
+        ])
+
+        let userPermision = false
+
+        return (async () => {
+            const user = await Users.findById(id)
+            if (!user) throw new LogicError(`user with id ${id} does not exist`)
+            const { appData } = user
+
+            appData.forEach((app) => {
+                if(app.appId === 'marcusonDB' && app.role === 'god') userPermision = true
+            })
+
+            if(!userPermision)throw new LogicError(`user with id ${id} does not have permisions to view all users`)
+
+            let users = await Users.find({})
+            let _users = []
+            users.forEach((user)=>{
+                _users.push({id: user._id, email: user.email, appData: user.appData, userData: user.userData })
+            })
+
+            return _users
+        })()
+    },
+
+    adminDeleteUser(id, userEmail) {
+        validate.arguments([
+            { name: 'id', value: id, type: 'string', notEmpty: true },
+            { name: 'email', value: userEmail, type: 'string', notEmpty: true }
+        ])
+
+        let _email = userEmail.toLowerCase()
+        validate.email(_email)
+
+        let userPermision = false
+
+        return (async () => {
+            const user = await Users.findById(id)
+            if (!user) throw new LogicError(`user with id ${id} does not exist`)
+            const { appData } = user
+
+            appData.forEach((app) => {
+                if(app.appId === 'marcusonDB' && app.role === 'god') userPermision = true
+            })
+
+            if(!userPermision)throw new LogicError(`user with id ${id} does not have permisions to delete users`)
+
+            let userToDelete = await Users.findOne({email: _email})
+
+            await Users.findByIdAndDelete(userToDelete.id)
+
+            return `user ${_email} succesfully deleted `
+        })()
+    },
+
+    adminRegisterUserAppData(id, userEmail, appData) {
+        let _appData = {}
+        let _role = 'user'
+        validate.arguments([
+            { name: 'id', value: id, type: 'string', notEmpty: true },
+            { name: 'appData', value: appData, type: 'object', notEmpty: true },
+            { name: 'email', value: userEmail, type: 'string', notEmpty: true },
+            { name: 'appId', value: appData.appId, type: 'string', notEmpty: true }
+        ])
+
+        let _email = userEmail.toLowerCase()
+        validate.email(_email)
+
+        let userPermision = false
+
+        if (!appData.appId) throw new LogicError('missing appId on appData')
+        if (appData.role == 'admin' || appData.role == 'owner' || appData.role == 'god') _role = appData.role
+
+        _appData = {
+            appId: appData.appId,
+            role: _role
+        }
+
+        return (async () => {
+            try {
+                const user = await Users.findById(id)
+                if (!user) throw new LogicError(`user with id ${id} does not exist`)
+                const { appData } = user
+
+                appData.forEach((app) => {
+                    if (app.appId === 'marcusonDB' && app.role === 'god') userPermision = true
+                })
+
+                if (!userPermision) throw new LogicError(`user with id ${id} does not have permisions to register apps to users`)
+
+                const userToUpdate = await Users.findOne({email:_email})
+                if (!userToUpdate) throw new LogicError(`user does not exist`)
+
+                if (userToUpdate.appData.length > 0){
+                    userToUpdate.appData.forEach(element => {
+                        if (element.appId === appData.appId) throw new LogicError(`app ${_appData.appId} already registered for user: ${userToUpdate.email}`)
+                    });
+                }
+                userToUpdate.appData.push(_appData)
+                await Users.findByIdAndUpdate(userToUpdate.id, userToUpdate)
+
+                return `app ${_appData.appId} succesfully registered to ${_email}`
+
+            } catch (error) {
+                throw new LogicError(error.message)
+            }
+        })()
+    },
+
+    adminDeleteUserAppData(id, userEmail, appId) {
+        let _appId = appId
+        validate.arguments([
+            { name: 'id', value: id, type: 'string', notEmpty: true },
+            { name: 'appId', value: appId, type: 'string', notEmpty: true },
+            { name: 'email', value: userEmail, type: 'string', notEmpty: true }
+        ])
+
+        let _email = userEmail.toLowerCase()
+        validate.email(_email)
+
+        let userPermision = false
+
+        return (async () => {
+            try {
+                const user = await Users.findById(id)
+                if (!user) throw new LogicError(`user with id ${id} does not exist`)
+                const { appData } = user
+
+                appData.forEach((app) => {
+                    if (app.appId === 'marcusonDB' && app.role === 'god') userPermision = true
+                })
+
+                if (!userPermision) throw new LogicError(`user with id ${id} does not have permisions to delete apps to users`)
+
+                const userToUpdate = await Users.findOne({email: _email})
+                if (!userToUpdate) throw new LogicError(`user does not exist`)
+
+                let appIds = await Users.find({'appData.appId': appId})
+                if (appIds.length == 0 ) throw new LogicError(`app Id named ${appId} does not exist`)
+
+                const newAppData = userToUpdate.appData.filter(({ appId:found }) => found != appId)
+                userToUpdate.appData = newAppData
+
+                await Users.findByIdAndUpdate(userToUpdate.id, userToUpdate)
+
+                return `app ${_appId} succesfully deleted from ${_email}`
+
+            } catch (error) {
+                throw new LogicError(error.message)
+            }
+        })()
+    },
+
+    adminRegisterApp(appId, owner) {
+        validate.arguments([
+            { name: 'appId', value: appId, type: 'string', notEmpty: true },
+            { name: 'owner', value: owner, type:'string', optional: true}
+        ])
+
+        return (async () => {
+            const app = await Apps.findOne({ appId })
+
+            if (app) throw new LogicError(`app with appId ${appId} already exists`)
+
+            try {
+                await Apps.create({ appId, owner })
+            } catch (error) {
+                throw new Error(error)
+            }
+
+
+        })()
+
+    },
+
+    adminDeleteApp(appId) {
+        validate.arguments([
+            { name: 'appId', value: appId, type: 'string', notEmpty: true }
+        ])
+
+        return (async () => {
+
+            const app = await Apps.findOne({appId})
+            if (!app) throw new LogicError(`app with appId ${appId} does not exist`)
+            await Apps.findByIdAndDelete(app.id)
+
+            return `App succesfully deleted`
+        })()
+    },
+
+    adminRetrieveAllApps(userId) {
+        validate.arguments([
+            { name: 'userId', value: userId, type: 'string', notEmpty: true }
+        ])
+
+        let userPermision = false
+
+        return (async () => {
+            const user = await Users.findById(userId)
+            if (!user) throw new LogicError(`user with id ${userId} does not exist`)
+            const { appData } = user
+
+            appData.forEach((app) => {
+                if(app.appId === 'marcusonDB' && app.role === 'god') userPermision = true
+            })
+
+            if(!userPermision)throw new LogicError(`user with id ${userId} does not have permisions to view all apps`)
+
+            let _apps = await Apps.find({})
+
+            return _apps
+        })()
+    },
+
 
 }
 

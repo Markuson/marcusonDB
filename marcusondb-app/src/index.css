@@ -1,0 +1,28 @@
+@import '../node_modules/uikit/dist/css/uikit.min.css';
+@import url('https://fonts.googleapis.com/css?family=Montserrat:300,400&display=swap');
+
+body {
+  margin: 0;
+  font-family: 'Montserrat';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-image: url('./assets/images/database.jpg') ;
+  background-size: cover;
+  background-attachment: fixed;
+  min-height: 100vh;
+}
+
+.card{
+  background-color: rgb(255, 255, 255, 0.7);
+  opacity: 0.4;
+  border-radius: 0.3em;
+  box-shadow: 2px 2px 6px slategray;
+}
+
+.select-none{
+  user-select: none;
+}
+
+.scroll{
+  overflow: auto;
+}
