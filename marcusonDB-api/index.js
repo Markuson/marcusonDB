@@ -6,7 +6,7 @@ const routes = require('./routes')
 const cors = require('cors')
 const mongoose = require('mongoose')
 
-const { env: { PORT, MONGODB_URI: url }, argv: [, , port = PORT || 4949], } = process;
+const { env: { PORT, DB_URI: url }, argv: [, , port = PORT || 4949], } = process;
 // const { env: { PORT, MONGO_URL_LOGIC: url }, argv: [, , port = PORT || 4949], } = process;
 
 (async () => {
