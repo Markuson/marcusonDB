@@ -34,7 +34,7 @@ export default function Navbar({
             <div className="uk-navbar-center">
                 <ul className="uk-navbar-nav">
                     <div className='uk-padding'>
-                        <li className='uk-active'>
+                        <li>
                             <button className="uk-button uk-button-text uk-button-large" onClick={userRegister} disabled={selected === 'UserRegister' ? true : false } data-uk-tooltip="title: Register User ; pos: bottom">
                                 <span className="uk-icon" data-uk-icon="icon: user; ratio: 2"></span>
                             </button>
@@ -58,18 +58,6 @@ export default function Navbar({
                         <li>
                             <button className="uk-button uk-button-text uk-button-large" onClick={appList} disabled={selected === 'AppList' ? true : false } data-uk-tooltip="title: View App List ; pos: bottom">
                                 <span className="uk-icon" data-uk-icon="icon: album; ratio: 2"></span>
-                            </button>
-                        </li>
-                    </div>
-                </ul>
-
-            </div>
-            <div className="uk-navbar-right">
-                <ul className="uk-navbar-nav">
-                    <div className='uk-padding'>
-                        <li className='uk-active uk-visible@s'>
-                            <button className="uk-button uk-button-text uk-button-large" onClick={() => onLogout()} data-uk-tooltip="title: Logout ; pos: bottom">
-                                <span className="uk-icon" data-uk-icon="icon: sign-out; ratio: 1"></span>
                             </button>
                         </li>
                     </div>
